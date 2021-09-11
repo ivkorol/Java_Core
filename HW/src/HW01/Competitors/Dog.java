@@ -1,4 +1,4 @@
-package HW01.Competitors;
+package HW.HW01.Competitors;
 
 public class Dog extends Animal{
     public Dog(String name) {
