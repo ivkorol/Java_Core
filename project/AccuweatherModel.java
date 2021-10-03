@@ -1,6 +1,7 @@
 package project;
 
 //import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import project.entity.Weather;
 import okhttp3.HttpUrl;
@@ -12,14 +13,15 @@ import java.io.IOException;
 import java.util.List;
 
 public class AccuweatherModel implements WeatherModel {
-    //http://dataservice.accuweather.com/forecasts/v1/daily/1day/349727
+
     private static final String PROTOKOL = "https";
     private static final String BASE_HOST = "dataservice.accuweather.com";
     private static final String FORECASTS = "forecasts";
     private static final String VERSION = "v1";
     private static final String DAILY = "daily";
     private static final String ONE_DAY = "1day";
-    private static final String API_KEY = "pXJd8MokcZCdrd2MsoGl2DBZAyCa0zvv";
+    private static final String FIVE_DAY = "5day";
+    private static final String API_KEY = "JGUjcnJjYBtxC49M5UqnT4F0MU2JUbOi";
     private static final String API_KEY_QUERY_PARAM = "apikey";
     private static final String LOCATIONS = "locations";
     private static final String CITIES = "cities";
@@ -30,7 +32,7 @@ public class AccuweatherModel implements WeatherModel {
 
 //    private DataBaseRepository dataBaseRepository = new DataBaseRepository();
 
-    public void getWeather(String selectedCity, Period period) throws IOException {
+    public void getWeather(String selectedCity, Period period) throws IOException, JsonMappingException {
         switch (period) {
             case NOW:
                 HttpUrl httpUrl = new HttpUrl.Builder()
@@ -51,12 +53,41 @@ public class AccuweatherModel implements WeatherModel {
                 Response oneDayForecastResponse = okHttpClient.newCall(request).execute();
                 String weatherResponse = oneDayForecastResponse.body().string();
                 System.out.println(weatherResponse);
-                //TODO: сделать человекочитаемый вывод погоды. Выбрать параметры для вывода на свое усмотрение
-                //Например: Погода в городе Москва - 5 градусов по цельсию Expect showers late Monday night
+
+                String weatherFromJson = objectMapper.writeValueAsString(oneDayForecastResponse);
+                System.out.println(weatherFromJson);
+
+                Response oneDayForecastResponseNew = objectMapper.readValue(weatherFromJson, Response.class);
+                System.out.println(oneDayForecastResponseNew);
+
                 //dataBaseRepository.saveWeatherToDataBase(new Weather()) - тут после парсинга добавляем данные в БД
                 break;
             case FIVE_DAYS:
-                //TODO*: реализовать вывод погоды на 5 дней
+                HttpUrl httpUrl5 = new HttpUrl.Builder()
+                        .scheme(PROTOKOL)
+                        .host(BASE_HOST)
+                        .addPathSegment(FORECASTS)
+                        .addPathSegment(VERSION)
+                        .addPathSegment(DAILY)
+                        .addPathSegment(FIVE_DAY)
+                        .addPathSegment(detectCityKey(selectedCity))
+                        .addQueryParameter(API_KEY_QUERY_PARAM, API_KEY)
+                        .build();
+
+                Request request5 = new Request.Builder()
+                        .url(httpUrl5)
+                        .build();
+
+                Response fiveDayForecastResponse = okHttpClient.newCall(request5).execute();
+                String weatherResponse5 = fiveDayForecastResponse.body().string();
+                System.out.println(weatherResponse5);
+
+                String weatherFromJson5 = objectMapper.writeValueAsString(fiveDayForecastResponse);
+                System.out.println(weatherFromJson5);
+
+                Response fiveDayForecastResponseNew = objectMapper.readValue(weatherFromJson5, Response.class);
+                System.out.println(fiveDayForecastResponseNew);
+
                 break;
         }
     }
@@ -67,7 +98,7 @@ public class AccuweatherModel implements WeatherModel {
     }
 
     private String detectCityKey(String selectCity) throws IOException {
-        //http://dataservice.accuweather.com/locations/v1/cities/autocomplete
+
         HttpUrl httpUrl = new HttpUrl.Builder()
                 .scheme(PROTOKOL)
                 .host(BASE_HOST)
