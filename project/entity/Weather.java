@@ -5,6 +5,12 @@ public class Weather {
     private String localDate;
     private double temperature;
 
+//    public Weather(String city, String localDate, double temperature) {
+//        this.city = city;
+//        this.localDate = localDate;
+//        this.temperature = temperature;
+//    }
+
     public Weather(String city, String localDate, double temperature) {
         this.city = city;
         this.localDate = localDate;
